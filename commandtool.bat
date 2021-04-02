@@ -23,9 +23,9 @@ ECHO 3. Find last boot time with systeminfo
 ECHO 4. Ping
 ECHO 5. PsExec
 ECHO 6. Custom command
-ECHO 7. Exit the tool
-ECHO 8. NYI
-ECHO 9. More options (NYI)
+ECHO 7. NYI
+ECHO 8. More options (NYI)
+ECHO 9. Exit the tool
 ECHO.
 ECHO If you are entering a custom command, the computer name in any command can be replaced with ^^!NAME^^! if desired.
 ECHO For best results with PsExec commands, run this script as admin.
@@ -37,9 +37,9 @@ ECHO.
 
 CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired tool or command. "
 
-IF ERRORLEVEL 9 GOTO donation
+IF ERRORLEVEL 9 GOTO end
 IF ERRORLEVEL 8 GOTO donation
-IF ERRORLEVEL 7 GOTO end
+IF ERRORLEVEL 7 GOTO donation
 IF ERRORLEVEL 6 GOTO five
 IF ERRORLEVEL 5 GOTO four
 IF ERRORLEVEL 4 GOTO three
