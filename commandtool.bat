@@ -10,6 +10,7 @@ ECHO Administrative permissions required. Detecting permissions...
 NET session >nul 2>&1
 IF %errorLevel% == 0 (
 ECHO Success: Administrative permissions confirmed.
+GOTO begin
     ) ELSE (
 ECHO Failure: Current permissions inadequate.
 GOTO admin
