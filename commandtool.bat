@@ -24,7 +24,7 @@ IF ERRORLEVEL 1 GOTO :notelevated
 :checkadmin
 WHOAMI /all | findstr S-1-16-12288 > nul
 
-IF %errorlevel%==1 GOTO NotAdmin
+IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
 ECHO.
 GOTO begin
@@ -72,7 +72,7 @@ ECHO 3. Find last boot time with systeminfo
 ECHO 4. Ping
 ECHO 5. PsExec
 ECHO 6. Custom command
-ECHO 7. NYI
+ECHO 7. Relaunch as admin
 ECHO 8. More options (NYI)
 ECHO 9. Exit the tool
 ECHO.
@@ -89,13 +89,16 @@ CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired to
 IF ERRORLEVEL 10 GOTO donation
 IF ERRORLEVEL 9 GOTO end
 IF ERRORLEVEL 8 GOTO donation
-IF ERRORLEVEL 7 GOTO donation
+IF ERRORLEVEL 7 GOTO six
 IF ERRORLEVEL 6 GOTO five
 IF ERRORLEVEL 5 GOTO four
 IF ERRORLEVEL 4 GOTO three
 IF ERRORLEVEL 3 GOTO two
 IF ERRORLEVEL 2 GOTO one
 IF ERRORLEVEL 1 GOTO clsbegin
+
+:six
+GOTO checkadmin
 
 :donation
 ECHO.
