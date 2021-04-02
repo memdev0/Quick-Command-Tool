@@ -4,24 +4,59 @@ SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 COLOR B
 SET PsExecPath=0
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
+SET ToolPath=0
+REM ToolPath is necessary for the permission checker to function correctly. Please paste the full path to the folder that contains the Quick Command Tool.
+REM NeedAdmin=0
+REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
-ECHO Administrative permissions required. Detecting permissions...
+IF !NeedAdmin!==1 GOTO checkadmin
+IF !NeedAdmin!==0 GOTO notelevated
 
-NET session >nul 2>&1
-IF %errorLevel% == 0 (
-ECHO Success: Administrative permissions confirmed.
+ECHO Administrative permissions are needed for some commands.
+ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
+ECHO If you would like this setting to be persistent, please edit line 9 of this script.
+ECHO.
+CHOICE /C YN /M "Do you want to run without admin permissions? "
+
+IF ERRORLEVEL 2 GOTO :checkadmin
+IF ERRORLEVEL 1 GOTO :notelevated
+
+:checkadmin
+WHOAMI /all | findstr S-1-16-12288 > nul
+
+IF %errorlevel%==1 GOTO NotAdmin
+ECHO Administrative permissions confirmed.
+ECHO.
 GOTO begin
-    ) ELSE (
-ECHO Failure: Current permissions inadequate.
-GOTO admin
-    )
 
-:admin
-RUNAS /profile /user:tehsy /savecred commandtool.bat
+:NotAdmin 
+echo This command prompt is not elevated. Using Powershell to invoke UAC prompt.
+ECHO.
+IF !ToolPath!==0 goto SetToolPath
+Powershell.exe Start-process !ToolPath!\commandtooltest.bat -verb runas
+goto end
+
+:SetToolPath
+ECHO You did not set the path to the tool^^! Please edit line 7 of this script.
+ECHO Alternatively, you can enter the path in the prompt below.
+ECHO Please note that this will need to be set every time this is launched if the script is not edited.
+ECHO If you selected this option by mistake, leave the field empty and press enter to continue without admin permissions.
+ECHO.
+SET /P ToolPath="Enter the full path to the folder that contains the Quick Command Tool: "
+IF !ToolPath!==0 goto notelevated
+goto NotAdmin
+
+:notelevated
+ECHO Running without admin permissions.
+ECHO.
+GOTO begin
+
+:clsbegin
+CLS
+GOTO begin
 
 :begin
 SET NAME=0
-CLS
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
 IF !NAME!==0 GOTO end
 
@@ -60,7 +95,7 @@ IF ERRORLEVEL 5 GOTO four
 IF ERRORLEVEL 4 GOTO three
 IF ERRORLEVEL 3 GOTO two
 IF ERRORLEVEL 2 GOTO one
-IF ERRORLEVEL 1 GOTO begin
+IF ERRORLEVEL 1 GOTO clsbegin
 
 :donation
 ECHO.
