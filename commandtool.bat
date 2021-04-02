@@ -24,17 +24,21 @@ ECHO 4. Ping
 ECHO 5. PsExec
 ECHO 6. Custom command
 ECHO 7. Exit the tool
+ECHO 8. NYI
+ECHO 9. More options (NYI)
 ECHO.
 ECHO If you are entering a custom command, the computer name in any command can be replaced with ^^!NAME^^! if desired.
 ECHO For best results with PsExec commands, run this script as admin.
 ECHO.
-ECHO If you appreciate this tool and would like to leave me a tip, please press 8 for information^^!
+ECHO If you appreciate this tool and would like to leave me a tip, press 0 for information^^!
 ECHO.
 ECHO Target computer: !NAME!
 ECHO.
 
-CHOICE /N /C:12345678 /M "Press the number that corresponds to your desired tool or command. "
+CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired tool or command. "
 
+IF ERRORLEVEL 0 GOTO donation
+IF ERRORLEVEL 9 GOTO donation
 IF ERRORLEVEL 8 GOTO donation
 IF ERRORLEVEL 7 GOTO end
 IF ERRORLEVEL 6 GOTO five
