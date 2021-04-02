@@ -5,6 +5,19 @@ COLOR B
 SET PsExecPath=0
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
 
+ECHO Administrative permissions required. Detecting permissions...
+
+NET session >nul 2>&1
+IF %errorLevel% == 0 (
+ECHO Success: Administrative permissions confirmed.
+    ) ELSE (
+ECHO Failure: Current permissions inadequate.
+GOTO admin
+    )
+
+:admin
+RUNAS /profile /user:tehsy /savecred commandtool.bat
+
 :begin
 SET NAME=0
 CLS
