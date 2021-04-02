@@ -6,7 +6,7 @@ SET PsExecPath=0
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
 SET ToolPath=0
 REM ToolPath is necessary for the permission checker to function correctly. Please paste the full path to the folder that contains the Quick Command Tool.
-REM NeedAdmin=0
+REM SET NeedAdmin=0
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
 IF !NeedAdmin!==1 GOTO checkadmin
