@@ -37,6 +37,7 @@ ECHO.
 
 CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired tool or command. "
 
+IF ERRORLEVEL 10 GOTO donation
 IF ERRORLEVEL 9 GOTO end
 IF ERRORLEVEL 8 GOTO donation
 IF ERRORLEVEL 7 GOTO donation
@@ -46,7 +47,6 @@ IF ERRORLEVEL 4 GOTO three
 IF ERRORLEVEL 3 GOTO two
 IF ERRORLEVEL 2 GOTO one
 IF ERRORLEVEL 1 GOTO begin
-IF ERRORLEVEL 0 GOTO donation
 
 :donation
 ECHO.
