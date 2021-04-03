@@ -9,19 +9,9 @@ REM ToolPath is necessary for the permission checker to function correctly. Plea
 REM SET NeedAdmin=0
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
-IF !NeedAdmin!==1 GOTO checkadmin
+IF !NeedAdmin!==1 GOTO elevate
 IF !NeedAdmin!==0 GOTO notelevated
 
-ECHO Administrative permissions are needed for some commands.
-ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
-ECHO If you would like this setting to be persistent, please edit line 9 of this script.
-ECHO.
-CHOICE /C YN /M "Do you want to run without admin permissions? "
-
-IF ERRORLEVEL 2 GOTO :checkadmin
-IF ERRORLEVEL 1 GOTO :notelevated
-
-:checkadmin
 WHOAMI /all | findstr S-1-16-12288 > nul
 
 IF ERRORLEVEL 1 GOTO NotAdmin
@@ -30,7 +20,18 @@ ECHO.
 GOTO begin
 
 :NotAdmin 
-echo This command prompt is not elevated. Using Powershell to invoke UAC prompt.
+ECHO Administrative permissions are needed for some commands.
+ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
+ECHO If you would like this setting to be persistent, please edit line 9 of this script.
+ECHO.
+CHOICE /C YN /M "Do you want to run without admin permissions? "
+ECHO.
+
+IF ERRORLEVEL 2 GOTO elevate
+IF ERRORLEVEL 1 GOTO notelevated
+
+:elevate
+ECHO Using Powershell to elevate session.
 ECHO.
 IF !ToolPath!==0 goto SetToolPath
 Powershell.exe Start-process !ToolPath!\commandtooltest.bat -verb runas
@@ -38,11 +39,15 @@ goto end
 
 :SetToolPath
 ECHO You did not set the path to the tool^^! Please edit line 7 of this script.
+ECHO.
 ECHO Alternatively, you can enter the path in the prompt below.
+ECHO.
 ECHO Please note that this will need to be set every time this is launched if the script is not edited.
 ECHO If you selected this option by mistake, leave the field empty and press enter to continue without admin permissions.
 ECHO.
 SET /P ToolPath="Enter the full path to the folder that contains the Quick Command Tool: "
+ECHO.
+
 IF !ToolPath!==0 goto notelevated
 goto NotAdmin
 
@@ -59,6 +64,7 @@ GOTO begin
 SET NAME=0
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
 IF !NAME!==0 GOTO end
+GOTO options
 
 :options
 CLS
@@ -85,6 +91,7 @@ ECHO Target computer: !NAME!
 ECHO.
 
 CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired tool or command. "
+ECHO.
 
 IF ERRORLEVEL 10 GOTO donation
 IF ERRORLEVEL 9 GOTO end
@@ -98,10 +105,15 @@ IF ERRORLEVEL 2 GOTO one
 IF ERRORLEVEL 1 GOTO clsbegin
 
 :six
-GOTO checkadmin
+WHOAMI /all | findstr S-1-16-12288 > nul
+
+IF ERRORLEVEL 1 GOTO elevate
+ECHO You are already running this as administrator^^!
+ECHO.
+PAUSE
+GOTO options
 
 :donation
-ECHO.
 ECHO.
 ECHO I accept tips in Bitcoin, Ethereum, Litecoin or Monero. Tips are not required, but are very greatly appreciated^^!
 ECHO.
@@ -117,6 +129,7 @@ GOTO options
 
 :five
 SET /P CUSTOM="Which command would you like to run? "
+ECHO.
 !CUSTOM!
 PAUSE
 GOTO options
@@ -132,6 +145,7 @@ ECHO 3. Restart print spooler on target computer.
 ECHO 4. Return to main menu.
 ECHO.
 CHOICE /N /C:1234 /M "Please select from the above options. "
+ECHO.
 
 IF ERRORLEVEL 4 GOTO options
 IF ERRORLEVEL 3 GOTO spooler
@@ -139,11 +153,17 @@ IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
 
 :oops
-ECHO.
 ECHO You did not set a path for PsExec^^! Please edit line 5 of this script with the path to your PSTools folder.
 ECHO.
-PAUSE
-GOTO options
+ECHO Alternatively, you can enter the path in the prompt below.
+ECHO Please note that this will need to be set every time this is launched if the script is not edited.
+ECHO If you selected this option by mistake, leave the field empty and press enter to return to the main menu.
+ECHO.
+SET /P PsExecPath="Enter the full path to the PSTools folder: "
+ECHO.
+
+IF !PsExecPath!==0 GOTO options
+GOTO four
 
 :spooler
 ECHO Restarting print spooler. This will take about one minute. The script will print a message to let you know when it is complete.
