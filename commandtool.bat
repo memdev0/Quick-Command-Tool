@@ -25,7 +25,7 @@ GOTO begin
 :NotAdmin 
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
-ECHO If you would like this setting to be persistent, please edit line 9 of this script.
+ECHO If you would like this setting to be persistent, please edit line 12 of this script.
 ECHO.
 CHOICE /C YN /M "Do you want to run without admin permissions? "
 ECHO.
@@ -41,7 +41,7 @@ Powershell.exe Start-process !ToolPath!\commandtooltest.bat -verb runas
 goto end
 
 :SetToolPath
-ECHO You did not set the path to the tool^^! Please edit line 7 of this script.
+ECHO You did not set the path to the tool^^! Please edit line 9 of this script.
 ECHO.
 ECHO Alternatively, you can enter the path in the prompt below.
 ECHO.
@@ -168,7 +168,7 @@ PAUSE
 GOTO options
 
 :oops
-ECHO You did not set a path for PsExec^^! Please edit line 5 of this script with the path to your PSTools folder.
+ECHO You did not set a path for PsExec^^! Please edit line 6 of this script with the path to your PSTools folder.
 ECHO.
 ECHO Alternatively, you can enter the path in the prompt below.
 ECHO Please note that this will need to be set every time this is launched if the script is not edited.
