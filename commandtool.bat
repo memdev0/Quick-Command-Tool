@@ -1,5 +1,5 @@
 @echo OFF
-TITLE Quick Command Tool
+TITLE Quick Command Tool - Target: No Target Selected
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 COLOR B
 SET PsExecPath=0
@@ -64,6 +64,7 @@ GOTO begin
 SET NAME=0
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
 IF !NAME!==0 GOTO end
+TITLE Quick Command Tool - Target: !NAME!
 GOTO options
 
 :options
@@ -74,7 +75,7 @@ ECHO *** Please ensure the computer name or IP address is correct to prevent iss
 ECHO.
 ECHO 1. Change target computer
 ECHO 2. nslookup
-ECHO 3. Find last boot time with systeminfo
+ECHO 3. SystemInfo
 ECHO 4. Ping
 ECHO 5. PsExec
 ECHO 6. Custom command
@@ -142,15 +143,25 @@ ECHO *** PsExec Options ***
 ECHO 1. Define your own arguments to the command.
 ECHO 2. Run gpupdate /force on target computer.
 ECHO 3. Restart print spooler on target computer.
-ECHO 4. Return to main menu.
+ECHO 4. Force reboot target PC.
+ECHO 5. Return to main menu.
 ECHO.
-CHOICE /N /C:1234 /M "Please select from the above options. "
+CHOICE /N /C:12345 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 4 GOTO options
+IF ERRORLEVEL 5 GOTO options
+IF ERRORLEVEL 4 GOTO reboot
 IF ERRORLEVEL 3 GOTO spooler
 IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
+
+:reboot
+ECHO.
+ECHO Rebooting remote PC now.
+ECHO.
+START !PsExecPath!\psexec \\!NAME! shutdown /f /r
+PAUSE
+GOTO options
 
 :oops
 ECHO You did not set a path for PsExec^^! Please edit line 5 of this script with the path to your PSTools folder.
@@ -194,7 +205,30 @@ PAUSE
 GOTO options
 
 :two
+ECHO.
+ECHO *** SystemInfo Options ***
+ECHO 1. Find last reboot time.
+ECHO 2. See available memory.
+ECHO 3. Return to main menu.
+ECHO.
+CHOICE /N /C:123 /M "Please select from the above options. "
+
+IF ERRORLEVEL 3 GOTO options
+IF ERRORLEVEL 2 GOTO memory
+IF ERRORLEVEL 1 GOTO boottime
+
+:memory
+SYSTEMINFO /S !NAME! | FIND "Memory"
+PAUSE
+GOTO options
+
+:boottime
 SYSTEMINFO /S !NAME! | FIND "System Boot Time"
+PAUSE
+GOTO options
+
+:one
+NSLOOKUP !NAME!
 PAUSE
 GOTO options
 
