@@ -231,8 +231,3 @@ GOTO options
 NSLOOKUP !NAME!
 PAUSE
 GOTO options
-
-:one
-NSLOOKUP !NAME!
-PAUSE
-GOTO options
