@@ -12,12 +12,14 @@ REM ToolPath is necessary for the permission checker to function correctly. Plea
 REM SET NeedAdmin=0
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
-IF !NeedAdmin!==1 GOTO elevate
+IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
+:checkadmin
 WHOAMI /all | findstr S-1-16-12288 > nul
 
 IF ERRORLEVEL 1 GOTO NotAdmin
+IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions confirmed.
 ECHO.
 GOTO begin
@@ -196,7 +198,7 @@ PAUSE
 GOTO options
 
 :defaultpsexec
-START !PsExecPath\psexec \\!NAME! gpupdate /force
+START !PsExecPath!\psexec \\!NAME! gpupdate /force
 ECHO Running gpupdate. Please check PsExec window to confirm there are no errors.
 PAUSE
 GOTO options
