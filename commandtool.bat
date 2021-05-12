@@ -2,10 +2,13 @@
 TITLE Quick Command Tool - Target: No Target Selected
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 COLOR B
+
 SET PsExecPath=0
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
+
 SET ToolPath=0
 REM ToolPath is necessary for the permission checker to function correctly. Please paste the full path to the folder that contains the Quick Command Tool.
+
 REM SET NeedAdmin=0
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
@@ -73,20 +76,19 @@ CLS
 ECHO *** Unless specified, all commands are automated and will use the computer name or IP address you entered. ***
 ECHO *** Please ensure the computer name or IP address is correct to prevent issues. ***
 ECHO.
-ECHO 1. Change target computer
-ECHO 2. nslookup
-ECHO 3. SystemInfo
-ECHO 4. Ping
-ECHO 5. PsExec
-ECHO 6. Custom command
-ECHO 7. Relaunch as admin
+ECHO 1. Change target computer.
+ECHO 2. Run nslookup on target computer.
+ECHO 3. View SystemInfo Menu.
+ECHO 4. Ping target computer.
+ECHO 5. View PsExec Menu.
+ECHO 6. Run a custom command.
+ECHO 7. Relaunch this script as admin.
 ECHO 8. More options (NYI)
-ECHO 9. Exit the tool
+ECHO 9. Exit the script.
+ECHO 0. View additional information about this script.
 ECHO.
 ECHO If you are entering a custom command, the computer name in any command can be replaced with ^^!NAME^^! if desired.
 ECHO For best results with PsExec commands, run this script as admin.
-ECHO.
-ECHO If you appreciate this tool and would like to leave me a tip, press 0 for information^^!
 ECHO.
 ECHO Target computer: !NAME!
 ECHO.
@@ -94,9 +96,9 @@ ECHO.
 CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired tool or command. "
 ECHO.
 
-IF ERRORLEVEL 10 GOTO donation
+IF ERRORLEVEL 10 GOTO info
 IF ERRORLEVEL 9 GOTO end
-IF ERRORLEVEL 8 GOTO donation
+IF ERRORLEVEL 8 GOTO info
 IF ERRORLEVEL 7 GOTO six
 IF ERRORLEVEL 6 GOTO five
 IF ERRORLEVEL 5 GOTO four
@@ -114,14 +116,16 @@ ECHO.
 PAUSE
 GOTO options
 
-:donation
+:info
 ECHO.
-ECHO I accept tips in Bitcoin, Ethereum, Litecoin or Monero. Tips are not required, but are very greatly appreciated^^!
+ECHO The intent of this script is to make interaction with the command line faster and more efficient, to streamline troubleshooting processes.
+ECHO The latest version of this script can always be found at: https://github.com/memdev0/Quick-Command-Tool/
 ECHO.
-ECHO BTC Address: 1KKBM6veHo78Mt7eejvp3nbCSHmA2YzDwp
-ECHO ETH Address: 0x13d4Df2395c5366BEEc8F624dBba884a61401372
-ECHO LTC Address: LfUi1LRDyEWFcg4dq6AS9SJ7pm93WZrtN4
-ECHO XMR Address: 431uwg8s3bHR5YdkPU1TtsUZHkepQb5Ar3XaLEQU44NvdJhDNQF3L6nWMRwJ2VQiQxQexAUQtuCdxG3njeZTXh7qSN2VpBo
+ECHO Thank you for using the Quick Command Tool^^!
+ECHO If you found this script useful, please consider donating some Bitcoin to the address below.
+ECHO Tips are not required, but are greatly appreciated. Thank you for supporting development of the Quick Command Tool^^!
+ECHO.
+ECHO BTC Address: 1N3HfM4wYu14MEQ5vRiDjpkBgZHg59NrUQ
 ECHO.
 ECHO Press any key to return to main menu.
 ECHO.
