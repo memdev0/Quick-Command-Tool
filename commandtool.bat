@@ -42,11 +42,9 @@ goto end
 
 :SetToolPath
 ECHO You did not set the path to the tool^^! Please edit line 9 of this script.
-ECHO.
 ECHO Alternatively, you can enter the path in the prompt below.
 ECHO.
 ECHO Please note that this will need to be set every time this is launched if the script is not edited.
-ECHO If you selected this option by mistake, leave the field empty and press enter to continue without admin permissions.
 ECHO.
 SET /P ToolPath="Enter the full path to the folder that contains the Quick Command Tool: "
 ECHO.
