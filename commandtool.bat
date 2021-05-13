@@ -64,6 +64,7 @@ CLS
 GOTO begin
 
 :begin
+TITLE Quick Command Tool - Target: No Target Selected
 SET NAME=0
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
 IF !NAME!==0 GOTO end
