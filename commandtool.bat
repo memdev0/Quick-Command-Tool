@@ -19,12 +19,12 @@ IF !NeedAdmin!==0 GOTO notelevated
 WHOAMI /all | findstr S-1-16-12288 > nul
 
 IF ERRORLEVEL 1 GOTO NotAdmin
-IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions confirmed.
 ECHO.
 GOTO begin
 
-:NotAdmin 
+:NotAdmin
+IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
 ECHO If you would like this setting to be persistent, please edit line 12 of this script.
@@ -39,7 +39,7 @@ IF ERRORLEVEL 1 GOTO notelevated
 ECHO Using Powershell to elevate session.
 ECHO.
 IF !ToolPath!==0 goto SetToolPath
-Powershell.exe Start-process !ToolPath!\commandtooltest.bat -verb runas
+Powershell.exe Start-process !ToolPath!\commandtool.bat -verb runas
 goto end
 
 :SetToolPath
