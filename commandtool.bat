@@ -1,5 +1,7 @@
 @echo OFF
 TITLE Quick Command Tool - Target: No Target Selected
+CLS
+@pushd %~dp0
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 COLOR B
 
@@ -40,7 +42,7 @@ ECHO Using Powershell to elevate session.
 ECHO.
 IF !ToolPath!==0 goto SetToolPath
 Powershell.exe Start-process !ToolPath!\commandtool.bat -verb runas
-goto end
+goto close
 
 :SetToolPath
 ECHO You did not set the path to the tool^^! Please edit line 9 of this script.
@@ -67,7 +69,7 @@ GOTO begin
 TITLE Quick Command Tool - Target: No Target Selected
 SET NAME=0
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
-IF !NAME!==0 GOTO end
+IF !NAME!==0 GOTO close
 TITLE Quick Command Tool - Target: !NAME!
 GOTO options
 
@@ -97,7 +99,7 @@ CHOICE /N /C:1234567890 /M "Press the number that corresponds to your desired to
 ECHO.
 
 IF ERRORLEVEL 10 GOTO info
-IF ERRORLEVEL 9 GOTO end
+IF ERRORLEVEL 9 GOTO close
 IF ERRORLEVEL 8 GOTO info
 IF ERRORLEVEL 7 GOTO six
 IF ERRORLEVEL 6 GOTO five
@@ -106,6 +108,10 @@ IF ERRORLEVEL 4 GOTO three
 IF ERRORLEVEL 3 GOTO two
 IF ERRORLEVEL 2 GOTO one
 IF ERRORLEVEL 1 GOTO clsbegin
+
+:close
+popd
+exit
 
 :six
 WHOAMI /all | findstr S-1-16-12288 > nul
