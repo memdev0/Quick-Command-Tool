@@ -82,7 +82,7 @@ ECHO 2. Run nslookup on target computer.
 ECHO 3. View SystemInfo Menu.
 ECHO 4. Ping target computer.
 ECHO 5. View PsExec Menu.
-ECHO 6. Run a custom command.
+ECHO 6. Enter your own command.
 ECHO 7. Relaunch this script as admin.
 ECHO 8. More options (NYI)
 ECHO 9. Exit the script.
