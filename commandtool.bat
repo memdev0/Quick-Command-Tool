@@ -88,7 +88,6 @@ ECHO 8. More options (NYI)
 ECHO 9. Exit the script.
 ECHO 0. View additional information about this script.
 ECHO.
-ECHO If you are entering a custom command, the computer name in any command can be replaced with ^^!NAME^^! if desired.
 ECHO For best results with PsExec commands, run this script as admin.
 ECHO.
 ECHO Target computer: !NAME!
