@@ -148,16 +148,26 @@ ECHO 1. Define your own arguments to the command.
 ECHO 2. Run gpupdate /force on target computer.
 ECHO 3. Restart print spooler on target computer.
 ECHO 4. Force reboot target PC.
-ECHO 5. Return to main menu.
+ECHO 5. Lock target PC.
+ECHO 6. Return to main menu.
 ECHO.
-CHOICE /N /C:12345 /M "Please select from the above options. "
+CHOICE /N /C:123456 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 5 GOTO options
+IF ERRORLEVEL 6 GOTO options
+IF ERRORLEVEL 5 GOTO lock
 IF ERRORLEVEL 4 GOTO reboot
 IF ERRORLEVEL 3 GOTO spooler
 IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
+
+:lock
+ECHO.
+ECHO Locking remote PC now.
+ECHO.
+START !PsExecPath!\psexec \\!NAME! rundll32.exe user32.dll, LockWorkStation
+PAUSE
+GOTO options
 
 :reboot
 ECHO.
