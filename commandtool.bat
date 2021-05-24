@@ -14,6 +14,13 @@ REM ToolPath is necessary for the permission checker to function correctly. Plea
 REM SET NeedAdmin=0
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
+REM SET LogFile=
+REM Experimental feature to automatically write ticket notes.
+
+REM SET p1=
+REM SET d1=
+REM These will set network locations. p# for print servers and d# for shared drives. Will automatically open when selected. Can be scaled as needed.
+
 IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
@@ -63,7 +70,14 @@ GOTO begin
 
 :clsbegin
 CLS
+IF DEFINED LogFile goto openlog
 GOTO begin
+
+:openlog
+START !LogFile!
+TIMEOUT /t 3
+DEL /F !LogFile!
+goto begin
 
 :begin
 TITLE Quick Command Tool - Target: No Target Selected
@@ -86,7 +100,7 @@ ECHO 4. Ping target computer.
 ECHO 5. View PsExec Menu.
 ECHO 6. Enter your own command.
 ECHO 7. Relaunch this script as admin.
-ECHO 8. More options (NYI)
+ECHO 8. See more options.
 ECHO 9. Exit the script.
 ECHO 0. View additional information about this script.
 ECHO.
@@ -100,7 +114,7 @@ ECHO.
 
 IF ERRORLEVEL 10 GOTO info
 IF ERRORLEVEL 9 GOTO close
-IF ERRORLEVEL 8 GOTO info
+IF ERRORLEVEL 8 GOTO page2
 IF ERRORLEVEL 7 GOTO six
 IF ERRORLEVEL 6 GOTO five
 IF ERRORLEVEL 5 GOTO four
@@ -108,10 +122,6 @@ IF ERRORLEVEL 4 GOTO three
 IF ERRORLEVEL 3 GOTO two
 IF ERRORLEVEL 2 GOTO one
 IF ERRORLEVEL 1 GOTO clsbegin
-
-:close
-popd
-exit
 
 :six
 WHOAMI /all | findstr S-1-16-12288 > nul
@@ -171,7 +181,8 @@ IF ERRORLEVEL 1 GOTO custompsexec
 ECHO.
 ECHO Locking remote PC now.
 ECHO.
-START !PsExecPath!\psexec \\!NAME! rundll32.exe user32.dll, LockWorkStation
+START !PsExecPath!\psexec \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
+ECHO •Remotely locked !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -180,6 +191,7 @@ ECHO.
 ECHO Rebooting remote PC now.
 ECHO.
 START !PsExecPath!\psexec \\!NAME! shutdown /f /r
+ECHO •Reset !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -203,6 +215,7 @@ TIMEOUT /T 10 /NOBREAK
 START !PsExecPath!\psexec \\!NAME! NET start spooler
 TIMEOUT /T 50 /NOBREAK
 ECHO Print spooler should now be restarted. Please check the PsExec windows to confirm there were no errors.
+ECHO •Remotely restarted print spooler on !NAME! and printing a test page. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -210,12 +223,14 @@ GOTO options
 SET /P COMMAND="Please complete the command with your desired arguments: psexec \\!NAME! "
 
 START !PsExecPath!\psexec \\!NAME! !COMMAND!
+ECHO •Ran !COMMAND! on !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
 :defaultpsexec
 START !PsExecPath!\psexec \\!NAME! gpupdate /force
 ECHO Running gpupdate. Please check PsExec window to confirm there are no errors.
+ECHO •Ran remote gpupdate on !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -251,3 +266,69 @@ GOTO options
 NSLOOKUP !NAME!
 PAUSE
 GOTO options
+
+:page2
+ECHO.
+ECHO *** Main Menu Page 2 ***
+ECHO 1. Network Locations
+ECHO 2. Return to main menu.
+ECHO.
+CHOICE /N /C:12 /M "Please select from the above options. "
+ECHO.
+
+IF ERRORLEVEL 2 GOTO options
+IF ERRORLEVEL 1 GOTO locations
+
+:locations
+ECHO.
+ECHO *** Network Locations ***
+ECHO 1. Print Servers
+ECHO 2. Network Drives
+ECHO 3. Return to previous page.
+ECHO.
+ECHO This menu will automatically open the selected location in File Explorer.
+ECHO.
+CHOICE /N /C:123 /M "Please select from the above options. "
+ECHO.
+
+IF ERRORLEVEL 3 GOTO page2
+IF ERRORLEVEL 2 GOTO drives
+IF ERRORLEVEL 1 GOTO printservers
+
+:printservers
+ECHO.
+ECHO *** Print Servers ***
+ECHO.
+ECHO 1. !p1!
+ECHO 2. Return to previous page.
+ECHO.
+CHOICE /N /C:12 /M "Please select from the above options. "
+ECHO.
+
+IF ERRORLEVEL 2 GOTO locations
+IF ERRORLEVEL 1 GOTO print1
+
+:print1
+START !p1!
+GOTO options
+
+:drives
+ECHO.
+ECHO *** Network Drives ***
+ECHO.
+ECHO 1. !d1!
+ECHO 2. Return to previous page.
+ECHO.
+CHOICE /N /C:12 /M "Please select from the above options. "
+ECHO.
+
+IF ERRORLEVEL 2 GOTO locations
+IF ERRORLEVEL 1 GOTO drive1
+
+:drive1
+START !d1!
+GOTO options
+
+:close
+popd
+exit
