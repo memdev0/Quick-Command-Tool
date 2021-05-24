@@ -180,7 +180,7 @@ IF ERRORLEVEL 1 GOTO custompsexec
 ECHO.
 ECHO Locking remote PC now.
 ECHO.
-START !PsExecPath!\psexec \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
+START !PsExecPath!\psexec -s -i \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
 ECHO •Remotely locked !NAME!. >> !LogFile!
 PAUSE
 GOTO options
