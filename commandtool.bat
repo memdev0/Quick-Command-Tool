@@ -75,8 +75,6 @@ GOTO begin
 
 :openlog
 START !LogFile!
-TIMEOUT /t 3
-DEL /F !LogFile!
 goto begin
 
 :begin
@@ -85,6 +83,7 @@ SET NAME=0
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
 IF !NAME!==0 GOTO close
 TITLE Quick Command Tool - Target: !NAME!
+DEL /F !LogFile!
 GOTO options
 
 :options
