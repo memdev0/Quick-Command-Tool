@@ -83,7 +83,7 @@ SET NAME=0
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
 IF !NAME!==0 GOTO close
 TITLE Quick Command Tool - Target: !NAME!
-DEL /F !LogFile!
+IF DEFINED LogFile DEL /F !LogFile!
 GOTO options
 
 :options
@@ -181,7 +181,7 @@ ECHO.
 ECHO Locking remote PC now.
 ECHO.
 START !PsExecPath!\psexec -s -i \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
-ECHO •Remotely locked !NAME!. >> !LogFile!
+IF DEFINED LogFile ECHO •Remotely locked !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -190,7 +190,7 @@ ECHO.
 ECHO Rebooting remote PC now.
 ECHO.
 START !PsExecPath!\psexec \\!NAME! shutdown /f /r
-ECHO •Reset !NAME!. >> !LogFile!
+IF DEFINED LogFile ECHO •Reset !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -214,7 +214,7 @@ TIMEOUT /T 10 /NOBREAK
 START !PsExecPath!\psexec \\!NAME! NET start spooler
 TIMEOUT /T 50 /NOBREAK
 ECHO Print spooler should now be restarted. Please check the PsExec windows to confirm there were no errors.
-ECHO •Remotely restarted print spooler on !NAME! and printing a test page. >> !LogFile!
+IF DEFINED LogFile ECHO •Remotely restarted print spooler on !NAME! and printing a test page. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -222,14 +222,14 @@ GOTO options
 SET /P COMMAND="Please complete the command with your desired arguments: psexec \\!NAME! "
 
 START !PsExecPath!\psexec \\!NAME! !COMMAND!
-ECHO •Ran !COMMAND! on !NAME!. >> !LogFile!
+IF DEFINED LogFile ECHO •Ran !COMMAND! on !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
 :defaultpsexec
 START !PsExecPath!\psexec \\!NAME! gpupdate /force
 ECHO Running gpupdate. Please check PsExec window to confirm there are no errors.
-ECHO •Ran remote gpupdate on !NAME!. >> !LogFile!
+IF DEFINED LogFile ECHO •Ran remote gpupdate on !NAME!. >> !LogFile!
 PAUSE
 GOTO options
 
