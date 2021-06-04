@@ -79,9 +79,8 @@ goto begin
 
 :begin
 TITLE Quick Command Tool - Target: No Target Selected
-SET NAME=0
-SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to end this script): "
-IF !NAME!==0 GOTO close
+SET NAME=localhost
+SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to target localhost): "
 TITLE Quick Command Tool - Target: !NAME!
 IF DEFINED LogFile DEL /F !LogFile!
 GOTO options
