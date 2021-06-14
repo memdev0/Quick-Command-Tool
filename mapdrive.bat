@@ -14,7 +14,7 @@ GOTO page1
 :page1
 ECHO *** Network Drives ***
 ECHO.
-ECHO There are 18 network drives total. Please use the number keys to select your desired drive and it will automatically be mapped.
+ECHO There are <x> network drives total. Please use the number keys to select your desired drive and it will automatically be mapped.
 ECHO Your drive will be mapped with the letter !LABEL!.
 ECHO.
 ECHO 1. Example (!d1!)
