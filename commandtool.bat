@@ -165,22 +165,39 @@ ECHO 4. Force reboot target PC.
 ECHO 5. Lock target PC.
 ECHO 6. Return to main menu.
 ECHO.
+QUERY user /server:!NAME!
+ECHO.
 CHOICE /N /C:123456 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 6 GOTO options
+IF ERRORLEVEL 7 GOTO options
+IF ERRORLEVEL 6 GOTO mapdrive
 IF ERRORLEVEL 5 GOTO lock
 IF ERRORLEVEL 4 GOTO reboot
 IF ERRORLEVEL 3 GOTO spooler
 IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
 
+:mapdrive
+ECHO.
+SET /P DPATH="Enter the full path to the share drive that needs to be mapped, without the double slashes at the start: \\"
+SET /P LABEL="Enter the letter you want to assign to the drive: "
+SET /P SESSION="Enter the ID of the session to run the command in: "
+ECHO.
+ECHO Mapping drive now. Please confirm it was successful.
+ECHO.
+START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cmd /c net use !LABEL!: \\!DPATH! /p:yes
+IF DEFINED LogFile ECHO • Remotely mapped \\!DPATH! on !NAME! and having them check to confirm access. >> !LogFile!
+PAUSE
+GOTO options
+
 :lock
+SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 ECHO Locking remote PC now.
 ECHO.
-START !PsExecPath!\psexec -s -i \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
-IF DEFINED LogFile ECHO •Remotely locked !NAME!. >> !LogFile!
+START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
+IF DEFINED LogFile ECHO • Remotely locked !NAME! and having them unlock to clear cached credentials. >> !LogFile!
 PAUSE
 GOTO options
 
