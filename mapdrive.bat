@@ -8,10 +8,10 @@ SET d1=
 
 :start
 SET /P LABEL="Enter the letter you want to assign to the drive: "
-CLS
 GOTO page1
 
 :page1
+CLS
 ECHO *** Network Drives ***
 ECHO.
 ECHO There are <x> network drives total. Please use the number keys to select your desired drive and it will automatically be mapped.
