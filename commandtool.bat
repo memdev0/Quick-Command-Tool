@@ -15,7 +15,7 @@ REM SET NeedAdmin=0
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
 REM SET LogFile=
-REM Experimental feature to automatically write ticket notes.
+REM Experimental feature to automatically write ticket notes. Please paste the full path including filename to the location you want to store the log file.
 
 REM SET p1=
 REM SET d1=
@@ -36,7 +36,7 @@ GOTO begin
 IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
-ECHO If you would like this setting to be persistent, please edit line 12 of this script.
+ECHO If you would like this setting to be persistent, please edit line 14 of this script.
 ECHO.
 CHOICE /C YN /M "Do you want to run without admin permissions? "
 ECHO.
@@ -52,7 +52,7 @@ Powershell.exe Start-process !ToolPath!\commandtool.bat -verb runas
 goto close
 
 :SetToolPath
-ECHO You did not set the path to the tool^^! Please edit line 9 of this script.
+ECHO You did not set the path to the tool^^! Please edit line 11 of this script.
 ECHO Alternatively, you can enter the path in the prompt below.
 ECHO.
 ECHO Please note that this will need to be set every time this is launched if the script is not edited.
@@ -180,14 +180,14 @@ IF ERRORLEVEL 1 GOTO custompsexec
 
 :mapdrive
 ECHO.
-SET /P DPATH="Enter the full path to the share drive that needs to be mapped, without the double slashes at the start: \\"
+SET /P DPATH="Enter the full path to the share drive that needs to be mapped: "
 SET /P LABEL="Enter the letter you want to assign to the drive: "
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 ECHO Mapping drive now. Please confirm it was successful.
 ECHO.
-START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cmd /c net use !LABEL!: \\!DPATH! /p:yes
-IF DEFINED LogFile ECHO • Remotely mapped \\!DPATH! on !NAME! and having them check to confirm access. >> !LogFile!
+START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cmd /c net use !LABEL!: !DPATH! /p:yes
+IF DEFINED LogFile ECHO • Remotely mapped !DPATH! on !NAME! and having them check to confirm access. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -211,7 +211,7 @@ PAUSE
 GOTO options
 
 :oops
-ECHO You did not set a path for PsExec^^! Please edit line 6 of this script with the path to your PSTools folder.
+ECHO You did not set a path for PsExec^^! Please edit line 8 of this script with the path to your PSTools folder.
 ECHO.
 ECHO Alternatively, you can enter the path in the prompt below.
 ECHO Please note that this will need to be set every time this is launched if the script is not edited.
@@ -286,13 +286,19 @@ GOTO options
 ECHO.
 ECHO *** Main Menu Page 2 ***
 ECHO 1. Network Locations
-ECHO 2. Return to main menu.
+ECHO 2. Open log file.
+ECHO 3. Return to main menu.
 ECHO.
-CHOICE /N /C:12 /M "Please select from the above options. "
+CHOICE /N /C:123 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 2 GOTO options
+IF ERRORLEVEL 3 GOTO options
+IF ERRORLEVEL 2 GOTO viewlog
 IF ERRORLEVEL 1 GOTO locations
+
+:viewlog
+START !LogFile!
+goto options
 
 :locations
 ECHO.
