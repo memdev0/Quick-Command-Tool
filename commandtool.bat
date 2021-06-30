@@ -185,7 +185,7 @@ IF ERRORLEVEL 1 GOTO custompsexec
 ECHO.
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
-!PsExecPath!\psexec -s -i !SESSION! \\!NAME! cleanmgr.exe /AUTOCLEAN
+!PsExecPath!\psexec -s -i !SESSION! \\!NAME! cleanmgr /AUTOCLEAN
 IF DEFINED LogFile ECHO • Ran remote disk cleanup. >> !LogFile!
 ECHO Remote disk cleanup started.
 PAUSE
