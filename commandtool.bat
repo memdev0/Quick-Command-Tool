@@ -163,32 +163,45 @@ ECHO 2. Run gpupdate /force on target computer.
 ECHO 3. Restart print spooler on target computer.
 ECHO 4. Force reboot target PC.
 ECHO 5. Lock target PC.
-ECHO 6. Return to main menu.
+ECHO 6. Print a test page on desired printer.
+ECHO 7. Return to main menu.
 ECHO.
 QUERY user /server:!NAME!
 ECHO.
-CHOICE /N /C:123456 /M "Please select from the above options. "
+CHOICE /N /C:1234567 /M "Please select from the above options. "
 ECHO.
 
 IF ERRORLEVEL 7 GOTO options
-IF ERRORLEVEL 6 GOTO mapdrive
+IF ERRORLEVEL 6 GOTO testpage
 IF ERRORLEVEL 5 GOTO lock
 IF ERRORLEVEL 4 GOTO reboot
 IF ERRORLEVEL 3 GOTO spooler
 IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
 
-:mapdrive
+:testpage
 ECHO.
-SET /P DPATH="Enter the full path to the share drive that needs to be mapped: "
-SET /P LABEL="Enter the letter you want to assign to the drive: "
-SET /P SESSION="Enter the ID of the session to run the command in: "
+!PsExecPath!\psexec \\!NAME! wmic printer list brief
 ECHO.
-ECHO Mapping drive now. Please confirm it was successful.
-ECHO.
-START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cmd /c net use !LABEL!: !DPATH! /p:yes
-IF DEFINED LogFile ECHO • Remotely mapped !DPATH! on !NAME! and having them check to confirm access. >> !LogFile!
+SET /P PRINTER="Enter the full name of the printer to send a test page to: "
+START !PsExecPath!\psexec \\!NAME! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
+IF DEFINED LogFile ECHO • Printed test page and confirmed it printed successfully. >> !LogFile!
+ECHO Test page has been printed. Please confirm if it was successful.
 PAUSE
+GOTO options
+
+:mapdrive
+REM ECHO.
+REM SET /P DPATH="Enter the full path to the share drive that needs to be mapped: "
+REM SET /P LABEL="Enter the letter you want to assign to the drive: "
+REM SET /P SESSION="Enter the ID of the session to run the command in: "
+REM ECHO.
+REM ECHO Mapping drive now. Please confirm it was successful.
+REM ECHO.
+REM START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cmd /c net use !LABEL!: !DPATH! /p:yes
+REM IF DEFINED LogFile ECHO • Remotely mapped !DPATH! on !NAME! and having them check to confirm access. >> !LogFile!
+REM PAUSE
+START mapdrive.bat
 GOTO options
 
 :lock
@@ -289,12 +302,14 @@ ECHO.
 ECHO *** Main Menu Page 2 ***
 ECHO 1. Network Locations
 ECHO 2. Open log file.
-ECHO 3. Return to main menu.
+ECHO 3. Map a network drive.
+ECHO 4. Return to main menu.
 ECHO.
-CHOICE /N /C:123 /M "Please select from the above options. "
+CHOICE /N /C:1234 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 3 GOTO options
+IF ERRORLEVEL 4 GOTO options
+IF ERRORLEVEL 3 GOTO mapdrive
 IF ERRORLEVEL 2 GOTO viewlog
 IF ERRORLEVEL 1 GOTO locations
 
