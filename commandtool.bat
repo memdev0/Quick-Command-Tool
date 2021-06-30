@@ -227,6 +227,8 @@ GOTO four
 ECHO Restarting print spooler. This will take about one minute. The script will print a message to let you know when it is complete.
 START !PsExecPath!\psexec \\!NAME! NET stop spooler
 TIMEOUT /T 10 /NOBREAK
+START !PsExecPath!\psexec \\!NAME! del %systemroot%\System32\spool\printers\* /Q
+TIMEOUT /T 3 /NOBREAK
 START !PsExecPath!\psexec \\!NAME! NET start spooler
 TIMEOUT /T 50 /NOBREAK
 ECHO Print spooler should now be restarted. Please check the PsExec windows to confirm there were no errors.
