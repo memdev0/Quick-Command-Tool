@@ -164,14 +164,16 @@ ECHO 3. Restart print spooler on target computer.
 ECHO 4. Force reboot target PC.
 ECHO 5. Lock target PC.
 ECHO 6. Print a test page on desired printer.
-ECHO 7. Return to main menu.
+ECHO 7. Run automated disk cleanup.
+ECHO 8. Return to main menu.
 ECHO.
 QUERY user /server:!NAME!
 ECHO.
-CHOICE /N /C:1234567 /M "Please select from the above options. "
+CHOICE /N /C:12345678 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 7 GOTO options
+IF ERRORLEVEL 8 GOTO options
+IF ERRORLEVEL 7 GOTO cleanup
 IF ERRORLEVEL 6 GOTO testpage
 IF ERRORLEVEL 5 GOTO lock
 IF ERRORLEVEL 4 GOTO reboot
@@ -179,12 +181,24 @@ IF ERRORLEVEL 3 GOTO spooler
 IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
 
+:cleanup
+ECHO.
+SET /P SESSION="Enter the ID of the session to run the command in: "
+ECHO.
+!PsExecPath!\psexec -s -i !SESSION! \\!NAME! cleanmgr.exe /AUTOCLEAN
+IF DEFINED LogFile ECHO • Ran remote disk cleanup. >> !LogFile!
+ECHO Remote disk cleanup started.
+PAUSE
+GOTO options
+
 :testpage
+ECHO.
+SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 !PsExecPath!\psexec \\!NAME! wmic printer list brief
 ECHO.
 SET /P PRINTER="Enter the full name of the printer to send a test page to: "
-START !PsExecPath!\psexec \\!NAME! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
+START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
 IF DEFINED LogFile ECHO • Printed test page and confirmed it printed successfully. >> !LogFile!
 ECHO Test page has been printed. Please confirm if it was successful.
 PAUSE
@@ -250,9 +264,11 @@ PAUSE
 GOTO options
 
 :custompsexec
+ECHO.
+SET /P SESSION="Enter the ID of the session to run the command in: "
+ECHO.
 SET /P COMMAND="Please complete the command with your desired arguments: psexec \\!NAME! "
-
-START !PsExecPath!\psexec \\!NAME! !COMMAND!
+START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! !COMMAND!
 IF DEFINED LogFile ECHO •Ran !COMMAND! on !NAME!. >> !LogFile!
 PAUSE
 GOTO options
