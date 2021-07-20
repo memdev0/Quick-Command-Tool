@@ -1,6 +1,6 @@
 @echo OFF
-TITLE Quick Command Tool - Target: No Target Selected
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
+TITLE Quick Command Tool - Target: No Target Selected
 COLOR B
 CLS
 @pushd %~dp0
