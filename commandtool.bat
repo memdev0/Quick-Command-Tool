@@ -1,9 +1,9 @@
 @echo OFF
 TITLE Quick Command Tool - Target: No Target Selected
-CLS
-@pushd %~dp0
 SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 COLOR B
+CLS
+@pushd %~dp0
 
 SET PsExecPath=0
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
