@@ -8,14 +8,11 @@ CLS
 SET PsExecPath=0
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
 
-SET ToolPath=0
-REM ToolPath is necessary for the permission checker to function correctly. Please paste the full path to the folder that contains the Quick Command Tool.
-
-REM SET NeedAdmin=0
+SET NeedAdmin=1
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
-REM SET LogFile=
-REM Experimental feature to automatically write ticket notes. Please paste the full path including filename to the location you want to store the log file.
+REM SET Logging=on
+REM Experimental feature to automatically write ticket notes. Enter anything here to enable it.
 
 REM SET p1=
 REM SET d1=
@@ -68,21 +65,8 @@ IF ERRORLEVEL 1 GOTO notelevated
 :elevate
 ECHO Using Powershell to elevate session.
 ECHO.
-IF !ToolPath!==0 goto SetToolPath
-Powershell.exe Start-process !ToolPath!\commandtool.bat -verb runas
+Powershell.exe Start-process %0 -verb runas
 goto close
-
-:SetToolPath
-ECHO You did not set the path to the tool^^! Please edit line 11 of this script.
-ECHO Alternatively, you can enter the path in the prompt below.
-ECHO.
-ECHO Please note that this will need to be set every time this is launched if the script is not edited.
-ECHO.
-SET /P ToolPath="Enter the full path to the folder that contains the Quick Command Tool: "
-ECHO.
-
-IF !ToolPath!==0 goto notelevated
-goto NotAdmin
 
 :notelevated
 ECHO Running without admin permissions.
@@ -91,11 +75,11 @@ GOTO begin
 
 :clsbegin
 CLS
-IF DEFINED LogFile goto openlog
+IF DEFINED Logging goto openlog
 GOTO begin
 
 :openlog
-START !LogFile!
+START %CD%\log.txt
 goto begin
 
 :begin
@@ -103,7 +87,7 @@ TITLE Quick Command Tool - Target: No Target Selected
 SET NAME=localhost
 SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to target localhost): "
 TITLE Quick Command Tool - Target: !NAME!
-IF DEFINED LogFile DEL /F !LogFile!
+IF DEFINED Logging DEL /F %CD%\log.txt
 GOTO options
 
 :options
@@ -209,7 +193,7 @@ IF ERRORLEVEL 1 GOTO custompsexec
 :killpsexec
 ECHO.
 !PsExecPath!\pskill -t \\!NAME! psexesvc.exe
-IF DEFINED LogFile ECHO •Remotely ended active PsExec tasks on !NAME!. >> !LogFile!
+IF DEFINED Logging ECHO •Remotely ended active PsExec tasks on !NAME!. >> %CD%\log.txt
 ECHO Ended active PsExec tasks on !NAME!.
 PAUSE
 GOTO options
@@ -220,7 +204,7 @@ ECHO Pulling active tasks from target computer.
 START cmd /c !PsExecPath!\psexec \\!NAME! tasklist ^& pause
 SET /P TASK="Enter the full name and extension of the task you want to kill (example: outlook.exe): "
 !PsExecPath!\pskill -t \\!NAME! !TASK!
-IF DEFINED LogFile ECHO •Remotely ended !TASK! on !NAME!. >> !LogFile!
+IF DEFINED Logging ECHO •Remotely ended !TASK! on !NAME!. >> %CD%\log.txt
 ECHO Remotely ended !TASK! on !NAME!.
 PAUSE
 GOTO options
@@ -230,7 +214,7 @@ ECHO.
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! cleanmgr /AUTOCLEAN
-IF DEFINED LogFile ECHO •Ran remote disk cleanup. >> !LogFile!
+IF DEFINED Logging ECHO •Ran remote disk cleanup. >> %CD%\log.txt
 ECHO Remote disk cleanup started.
 PAUSE
 GOTO options
@@ -243,7 +227,7 @@ ECHO.
 ECHO.
 SET /P PRINTER="Enter the full name of the printer to send a test page to: "
 START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
-IF DEFINED LogFile ECHO •Printed test page and confirmed it printed successfully. >> !LogFile!
+IF DEFINED Logging ECHO •Printed test page and confirmed it printed successfully. >> %CD%\log.txt
 ECHO Test page has been printed. Please confirm if it was successful.
 PAUSE
 GOTO options
@@ -257,7 +241,7 @@ ECHO.
 ECHO Mapping drive now. Please confirm it was successful.
 ECHO.
 START cmd /c !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! net use !LABEL!: !DPATH! /p:yes ^& pause
-IF DEFINED LogFile ECHO •Remotely mapped !DPATH! on !NAME! and confirmed access. >> !LogFile!
+IF DEFINED Logging ECHO •Remotely mapped !DPATH! on !NAME! and confirmed access. >> %CD%\log.txt
 PAUSE
 GOTO options
 
@@ -267,7 +251,7 @@ ECHO.
 ECHO Locking remote PC now.
 ECHO.
 START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
-IF DEFINED LogFile ECHO •Remotely locked !NAME! and having them unlock to clear cached credentials. >> !LogFile!
+IF DEFINED Logging ECHO •Remotely locked !NAME! and having them unlock to clear cached credentials. >> %CD%\log.txt
 PAUSE
 GOTO options
 
@@ -276,7 +260,7 @@ ECHO.
 ECHO Rebooting remote PC now.
 ECHO.
 START !PsExecPath!\psexec \\!NAME! shutdown /f /r
-IF DEFINED LogFile ECHO •Reset !NAME!. >> !LogFile!
+IF DEFINED Logging ECHO •Reset !NAME!. >> %CD%\log.txt
 PAUSE
 GOTO options
 
@@ -302,7 +286,7 @@ TIMEOUT /T 3 /NOBREAK
 START !PsExecPath!\psexec \\!NAME! NET start spooler
 TIMEOUT /T 50 /NOBREAK
 ECHO Print spooler should now be restarted. Please check the PsExec windows to confirm there were no errors.
-IF DEFINED LogFile ECHO •Remotely restarted print spooler on !NAME! and printing a test page. >> !LogFile!
+IF DEFINED Logging ECHO •Remotely restarted print spooler on !NAME! and printing a test page. >> %CD%\log.txt
 PAUSE
 GOTO options
 
@@ -312,14 +296,14 @@ SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 SET /P COMMAND="Please complete the command with your desired arguments: psexec \\!NAME! "
 START !PsExecPath!\psexec -i !SESSION! \\!NAME! !COMMAND!
-IF DEFINED LogFile ECHO •Ran !COMMAND! on !NAME!. >> !LogFile!
+IF DEFINED Logging ECHO •Ran !COMMAND! on !NAME!. >> %CD%\log.txt
 PAUSE
 GOTO options
 
 :defaultpsexec
 START !PsExecPath!\psexec \\!NAME! gpupdate /force
 ECHO Running gpupdate. Please check PsExec window to confirm there are no errors.
-IF DEFINED LogFile ECHO •Ran remote gpupdate on !NAME!. >> !LogFile!
+IF DEFINED Logging ECHO •Ran remote gpupdate on !NAME!. >> %CD%\log.txt
 PAUSE
 GOTO options
 
@@ -373,7 +357,7 @@ IF ERRORLEVEL 2 GOTO viewlog
 IF ERRORLEVEL 1 GOTO locations
 
 :viewlog
-START !LogFile!
+START %CD%\log.txt
 goto options
 
 :locations
