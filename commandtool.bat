@@ -19,7 +19,7 @@ REM SET d1=
 REM These will set network locations. p# for print servers and d# for shared drives. Will automatically open when selected. Can be scaled as needed.
 
 REM SET User=
-REM Only set this if you are logged into an account other than your admin account. Otherwise lines 34-36 will automatically pull the username.
+REM Only set this if you are logged into an account other than your admin account. Otherwise lines 31-33 will automatically pull the username.
 
 REM SET Password=
 REM Set admin password here if you do not want to be prompted for it.
@@ -54,7 +54,7 @@ GOTO begin
 IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
-ECHO If you would like this setting to be persistent, please edit line 14 of this script.
+ECHO If you would like this setting to be persistent, please edit line 11 of this script.
 ECHO.
 CHOICE /C YN /M "Do you want to run without admin permissions? "
 ECHO.
