@@ -22,7 +22,7 @@ REM SET d1=
 REM These will set network locations. p# for print servers and d# for shared drives. Will automatically open when selected. Can be scaled as needed.
 
 REM SET UserName=
-REM Only set this if you are logged into an account other than your admin account. Otherwise lines 6-8 will automatically pull the username.
+REM Only set this if you are logged into an account other than your admin account. Otherwise lines 34-36 will automatically pull the username.
 
 REM SET Password=
 REM Set admin password here if you do not want to be prompted for it.
