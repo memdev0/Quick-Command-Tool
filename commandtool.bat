@@ -54,7 +54,7 @@ GOTO begin
 IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
-ECHO If you would like this setting to be persistent, please edit line 14 of this script.
+ECHO If you would like this setting to be persistent, please edit line 11 of this script.
 ECHO.
 CHOICE /C YN /M "Do you want to run without admin permissions? "
 ECHO.
