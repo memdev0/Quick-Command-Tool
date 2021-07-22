@@ -40,7 +40,8 @@ WHOAMI /all | findstr S-1-16-12288 > nul
 IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
 ECHO.
-GOTO adminpass
+IF NOT DEFINED Password GOTO adminpass
+IF DEFINED Password GOTO begin
 
 :adminpass
 SET /P Password="Enter your administrator password for PSExec commands: "
