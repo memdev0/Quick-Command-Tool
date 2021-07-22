@@ -21,7 +21,7 @@ REM These will set network locations. p# for print servers and d# for shared dri
 REM SET User=
 REM Only set this if you are logged into an account other than your admin account. Otherwise lines 31-33 will automatically pull the username.
 
-REM SET Password=
+REM SET Pass=
 REM Set admin password here if you do not want to be prompted for it.
 
 IF NOT DEFINED User GOTO pullname
@@ -42,12 +42,14 @@ WHOAMI /all | findstr S-1-16-12288 > nul
 IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
 ECHO.
-IF NOT DEFINED Password GOTO adminpass
-IF DEFINED Password GOTO begin
+IF NOT DEFINED Pass GOTO adminpass
+IF DEFINED Pass GOTO begin
 
 :adminpass
-SET /P Password="Enter your administrator password for PsExec commands: "
-CLS
+SET "psCommand=powershell -Command "$pword = read-host 'Enter Password' -AsSecureString ; ^
+    $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
+        [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
+FOR /F "usebackq delims=" %%P in (`%psCommand%`) DO SET "Pass=%%P"
 GOTO begin
 
 :NotAdmin
@@ -213,7 +215,7 @@ GOTO options
 ECHO.
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
-START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Password! cleanmgr /AUTOCLEAN
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Pass! cleanmgr /AUTOCLEAN
 IF DEFINED Logging ECHO •Ran remote disk cleanup. >> %CD%\log.txt
 ECHO Remote disk cleanup started.
 PAUSE
@@ -226,7 +228,7 @@ ECHO.
 !PsExecPath!\psexec \\!NAME! wmic printer list brief
 ECHO.
 SET /P PRINTER="Enter the full name of the printer to send a test page to: "
-START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Password! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Pass! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
 IF DEFINED Logging ECHO •Printed test page and confirmed it printed successfully. >> %CD%\log.txt
 ECHO Test page has been printed. Please confirm if it was successful.
 PAUSE
@@ -240,7 +242,7 @@ SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 ECHO Mapping drive now. Please confirm it was successful.
 ECHO.
-START cmd /c !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Password! net use !LABEL!: !DPATH! /p:yes ^& pause
+START cmd /c !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Pass! net use !LABEL!: !DPATH! /p:yes ^& pause
 IF DEFINED Logging ECHO •Remotely mapped !DPATH! on !NAME! and confirmed access. >> %CD%\log.txt
 PAUSE
 GOTO options
