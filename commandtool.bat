@@ -49,7 +49,7 @@ IF NOT DEFINED Password GOTO adminpass
 IF DEFINED Password GOTO begin
 
 :adminpass
-SET /P Password="Enter your administrator password for PSExec commands: "
+SET /P Password="Enter your administrator password for PsExec commands: "
 CLS
 GOTO begin
 
