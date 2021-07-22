@@ -18,18 +18,18 @@ REM SET p1=
 REM SET d1=
 REM These will set network locations. p# for print servers and d# for shared drives. Will automatically open when selected. Can be scaled as needed.
 
-SET UserName=
-REM Leave this blank unless you are logged into an account other than your admin account. This needs to be here but blank for it to pull the domain correctly.
+REM SET User=
+REM Only set this if you are logged into an account other than your admin account. Otherwise lines 34-36 will automatically pull the username.
 
 REM SET Password=
 REM Set admin password here if you do not want to be prompted for it.
 
-IF NOT DEFINED UserName GOTO pullname
-IF DEFINED UserName GOTO adminsplit
+IF NOT DEFINED User GOTO pullname
+IF DEFINED User GOTO adminsplit
 
 :pullname
 FOR /F "tokens=* USEBACKQ" %%F IN (`whoami`) DO (
-SET UserName=%%F
+SET User=%%F
 )
 
 :adminsplit
@@ -54,7 +54,7 @@ GOTO begin
 IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
-ECHO If you would like this setting to be persistent, please edit line 11 of this script.
+ECHO If you would like this setting to be persistent, please edit line 14 of this script.
 ECHO.
 CHOICE /C YN /M "Do you want to run without admin permissions? "
 ECHO.
@@ -213,7 +213,7 @@ GOTO options
 ECHO.
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
-START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! cleanmgr /AUTOCLEAN
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Password! cleanmgr /AUTOCLEAN
 IF DEFINED Logging ECHO •Ran remote disk cleanup. >> %CD%\log.txt
 ECHO Remote disk cleanup started.
 PAUSE
@@ -226,7 +226,7 @@ ECHO.
 !PsExecPath!\psexec \\!NAME! wmic printer list brief
 ECHO.
 SET /P PRINTER="Enter the full name of the printer to send a test page to: "
-START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Password! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
 IF DEFINED Logging ECHO •Printed test page and confirmed it printed successfully. >> %CD%\log.txt
 ECHO Test page has been printed. Please confirm if it was successful.
 PAUSE
@@ -240,7 +240,7 @@ SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 ECHO Mapping drive now. Please confirm it was successful.
 ECHO.
-START cmd /c !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! net use !LABEL!: !DPATH! /p:yes ^& pause
+START cmd /c !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Password! net use !LABEL!: !DPATH! /p:yes ^& pause
 IF DEFINED Logging ECHO •Remotely mapped !DPATH! on !NAME! and confirmed access. >> %CD%\log.txt
 PAUSE
 GOTO options
