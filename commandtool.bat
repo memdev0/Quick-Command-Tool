@@ -3,10 +3,6 @@ SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 TITLE Quick Command Tool - Target: No Target Selected
 COLOR B
 CLS
-FOR /F "tokens=* USEBACKQ" %%F IN (`whoami`) DO (
-SET UserName=%%F
-)
-CLS
 @pushd %~dp0
 
 SET PsExecPath=0
@@ -31,6 +27,15 @@ REM Only set this if you are logged into an account other than your admin accoun
 REM SET Password=
 REM Set admin password here if you do not want to be prompted for it.
 
+IF NOT DEFINED UserName GOTO pullname
+IF DEFINED UserName GOTO adminsplit
+
+:pullname
+FOR /F "tokens=* USEBACKQ" %%F IN (`whoami`) DO (
+SET UserName=%%F
+)
+
+:adminsplit
 IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
