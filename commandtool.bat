@@ -11,28 +11,19 @@ REM PsExecPath is only needed if you intend on using PsExec, otherwise this can 
 SET NeedAdmin=1
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
-REM SET Logging=on
-REM Experimental feature to automatically write ticket notes. Enter anything here to enable it.
+SET Logging=on
+REM Experimental feature to automatically write ticket notes. Enter anything here to enable it, or put REM in front of it to disable it.
 
-REM SET p1=
-REM SET d1=
+SET p1=0
+SET d1=0
 REM These will set network locations. p# for print servers and d# for shared drives. Will automatically open when selected. Can be scaled as needed.
 
-REM SET User=
-REM Only set this if you are logged into an account other than your admin account. Otherwise lines 31-33 will automatically pull the username.
+SET User=
+REM Set a persistent admin username here if you want to skip through the startup.
 
-REM SET Pass=
-REM Set admin password here if you do not want to be prompted for it.
+SET Pass=
+REM Set a persistent admin password here if you want to skip through the startup.
 
-IF NOT DEFINED User GOTO pullname
-IF DEFINED User GOTO adminsplit
-
-:pullname
-FOR /F "tokens=* USEBACKQ" %%F IN (`whoami`) DO (
-SET User=%%F
-)
-
-:adminsplit
 IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
@@ -42,14 +33,23 @@ WHOAMI /all | findstr S-1-16-12288 > nul
 IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
 ECHO.
-IF NOT DEFINED Pass GOTO adminpass
-IF DEFINED Pass GOTO begin
 
-:adminpass
-SET "psCommand=powershell -Command "$pword = read-host 'Enter Password' -AsSecureString ; ^
+IF NOT DEFINED User (
+  SET /P "InputUserName=Enter admin username or leave blank to grab from whoami: "
+  IF /I "!InputUserName!"=="" (
+    FOR /F "tokens=* USEBACKQ" %%U IN (`whoami`) DO SET "User=%%U"
+  ) ELSE IF /I NOT "!InputUserName!"=="" SET "User=!InputUserName!"
+) ELSE (
+  SET /P "InputUserName=Enter admin username or leave blank to use saved variable ^(!User!^): "
+  IF /I NOT "!InputUserName!"=="" SET "User=!InputUserName!"
+)
+
+SET "PSCommand=powershell -Command "$pword = read-host 'Enter admin password or leave blank to use saved variable' -AsSecureString ; ^
     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
         [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
-FOR /F "usebackq delims=" %%P in (`%psCommand%`) DO SET "Pass=%%P"
+FOR /F "usebackq delims=" %%P IN (`%PSCommand%`) DO SET "InputPassword=%%P"
+IF /I NOT "!InputPassword!"=="" SET "Pass=!InputPassword!"
+
 GOTO begin
 
 :NotAdmin
