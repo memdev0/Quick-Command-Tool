@@ -3,6 +3,10 @@ SETLOCAL ENABLEEXTENSIONS ENABLEDELAYEDEXPANSION
 TITLE Quick Command Tool - Target: No Target Selected
 COLOR B
 CLS
+FOR /F "tokens=* USEBACKQ" %%F IN (`whoami`) DO (
+SET UserName=%%F
+)
+CLS
 @pushd %~dp0
 
 SET PsExecPath=0
@@ -21,6 +25,12 @@ REM SET p1=
 REM SET d1=
 REM These will set network locations. p# for print servers and d# for shared drives. Will automatically open when selected. Can be scaled as needed.
 
+REM SET UserName=
+REM Only set this if you are logged into an account other than your admin account. Otherwise lines 6-8 will automatically pull the username.
+
+REM SET Password=
+REM Set admin password here if you do not want to be prompted for it.
+
 IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
@@ -30,6 +40,11 @@ WHOAMI /all | findstr S-1-16-12288 > nul
 IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
 ECHO.
+GOTO adminpass
+
+:adminpass
+SET /P Password="Enter your administrator password for PSExec commands: "
+CLS
 GOTO begin
 
 :NotAdmin
@@ -165,14 +180,18 @@ ECHO 4. Force reboot target PC.
 ECHO 5. Lock target PC.
 ECHO 6. Print a test page on desired printer.
 ECHO 7. Run automated disk cleanup.
-ECHO 8. Return to main menu.
+ECHO 8. Kill all running PsExec tasks on target.
+ECHO 9. Enter your own PsKill command.
+ECHO 0. Return to main menu.
 ECHO.
 QUERY user /server:!NAME!
 ECHO.
-CHOICE /N /C:12345678 /M "Please select from the above options. "
+CHOICE /N /C:1234567890 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 8 GOTO options
+IF ERRORLEVEL 10 GOTO options
+IF ERRORLEVEL 9 GOTO pskill
+IF ERRORLEVEL 8 GOTO killpsexec
 IF ERRORLEVEL 7 GOTO cleanup
 IF ERRORLEVEL 6 GOTO testpage
 IF ERRORLEVEL 5 GOTO lock
@@ -181,12 +200,31 @@ IF ERRORLEVEL 3 GOTO spooler
 IF ERRORLEVEL 2 GOTO defaultpsexec
 IF ERRORLEVEL 1 GOTO custompsexec
 
+:killpsexec
+ECHO.
+!PsExecPath!\pskill -t \\!NAME! psexesvc.exe
+IF DEFINED LogFile ECHO •Remotely ended active PsExec tasks on !NAME!. >> !LogFile!
+ECHO Ended active PsExec tasks on !NAME!.
+PAUSE
+GOTO options
+
+:pskill
+ECHO.
+ECHO Pulling active tasks from target computer.
+START cmd /c !PsExecPath!\psexec \\!NAME! tasklist ^& pause
+SET /P TASK="Enter the full name and extension of the task you want to kill (example: outlook.exe): "
+!PsExecPath!\pskill -t \\!NAME! !TASK!
+IF DEFINED LogFile ECHO •Remotely ended !TASK! on !NAME!. >> !LogFile!
+ECHO Remotely ended !TASK! on !NAME!.
+PAUSE
+GOTO options
+
 :cleanup
 ECHO.
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
-START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cleanmgr /AUTOCLEAN
-IF DEFINED LogFile ECHO • Ran remote disk cleanup. >> !LogFile!
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! cleanmgr /AUTOCLEAN
+IF DEFINED LogFile ECHO •Ran remote disk cleanup. >> !LogFile!
 ECHO Remote disk cleanup started.
 PAUSE
 GOTO options
@@ -198,24 +236,23 @@ ECHO.
 !PsExecPath!\psexec \\!NAME! wmic printer list brief
 ECHO.
 SET /P PRINTER="Enter the full name of the printer to send a test page to: "
-START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
-IF DEFINED LogFile ECHO • Printed test page and confirmed it printed successfully. >> !LogFile!
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
+IF DEFINED LogFile ECHO •Printed test page and confirmed it printed successfully. >> !LogFile!
 ECHO Test page has been printed. Please confirm if it was successful.
 PAUSE
 GOTO options
 
 :mapdrive
-REM ECHO.
-REM SET /P DPATH="Enter the full path to the share drive that needs to be mapped: "
-REM SET /P LABEL="Enter the letter you want to assign to the drive: "
-REM SET /P SESSION="Enter the ID of the session to run the command in: "
-REM ECHO.
-REM ECHO Mapping drive now. Please confirm it was successful.
-REM ECHO.
-REM START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! cmd /c net use !LABEL!: !DPATH! /p:yes
-REM IF DEFINED LogFile ECHO • Remotely mapped !DPATH! on !NAME! and having them check to confirm access. >> !LogFile!
-REM PAUSE
-START mapdrive.bat
+ECHO.
+SET /P DPATH="Enter the full path to the share drive that needs to be mapped, including the double slashes: "
+SET /P LABEL="Enter the letter you want to assign to the drive: "
+SET /P SESSION="Enter the ID of the session to run the command in: "
+ECHO.
+ECHO Mapping drive now. Please confirm it was successful.
+ECHO.
+START cmd /c !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !UserName! -p !Password! net use !LABEL!: !DPATH! /p:yes ^& pause
+IF DEFINED LogFile ECHO •Remotely mapped !DPATH! on !NAME! and confirmed access. >> !LogFile!
+PAUSE
 GOTO options
 
 :lock
@@ -224,7 +261,7 @@ ECHO.
 ECHO Locking remote PC now.
 ECHO.
 START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
-IF DEFINED LogFile ECHO • Remotely locked !NAME! and having them unlock to clear cached credentials. >> !LogFile!
+IF DEFINED LogFile ECHO •Remotely locked !NAME! and having them unlock to clear cached credentials. >> !LogFile!
 PAUSE
 GOTO options
 
@@ -268,7 +305,7 @@ ECHO.
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 SET /P COMMAND="Please complete the command with your desired arguments: psexec \\!NAME! "
-START !PsExecPath!\psexec -s -i !SESSION! \\!NAME! !COMMAND!
+START !PsExecPath!\psexec -i !SESSION! \\!NAME! !COMMAND!
 IF DEFINED LogFile ECHO •Ran !COMMAND! on !NAME!. >> !LogFile!
 PAUSE
 GOTO options
