@@ -168,16 +168,6 @@ IF ERRORLEVEL 1 GOTO clsbegin
 IF !modes!==local GOTO flagswitch
 IF !modes!==psexec GOTO flagswitch2
 
-:setpsexec
-SET modes=psexec
-ECHO Toggled PsExec mode on.
-GOTO options
-
-:setloc
-SET modes=local
-ECHO Toggled local mode on.
-GOTO options
-
 :admin
 WHOAMI /all | findstr S-1-16-12288 > nul
 
