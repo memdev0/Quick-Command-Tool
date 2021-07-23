@@ -414,4 +414,5 @@ GOTO options
 
 :close
 popd
+endlocal
 exit
