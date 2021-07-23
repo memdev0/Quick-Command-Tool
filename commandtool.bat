@@ -5,14 +5,14 @@ COLOR B
 CLS
 @pushd %~dp0
 
-SET PsExecPath=0
+SET PsExecPath=
 REM PsExecPath is only needed if you intend on using PsExec, otherwise this can be left alone.
 
 SET NeedAdmin=1
 REM Only set NeedAdmin to 0 if you will never need admin permissions for this tool. Conversely, setting to 1 will always auto-elevate it.
 
-SET Logging=on
-REM Experimental feature to automatically write ticket notes. Enter anything here to enable it, or put REM in front of it to disable it.
+SET Logging=
+REM Experimental feature to automatically write ticket notes. Enter anything here to enable it, or leave blank to disable it.
 
 SET p1=0
 SET d1=0
@@ -24,6 +24,24 @@ REM Set a persistent admin username here if you want to skip through the startup
 SET Pass=
 REM Set a persistent admin password here if you want to skip through the startup.
 
+IF NOT DEFINED PsExecPath GOTO localhandle
+IF /I "%~1"=="local" GOTO localhandle
+IF /I NOT "%~1"=="" GOTO namehandle
+GOTO adminsplit
+
+:localhandle
+SET modes=local
+SET NAME=localhost
+SET skipuserpass=1
+GOTO options
+
+:namehandle
+SET modes=psexec
+SET NAME=%1
+SET skipuserpass=0
+GOTO adminsplit
+
+:adminsplit
 IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
@@ -34,26 +52,30 @@ IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
 ECHO.
 
+IF !skipuserpass!==1 GOTO begin
+
+:getcreds
 IF NOT DEFINED User (
   SET /P "InputUserName=Enter admin username or leave blank to grab from whoami: "
   IF /I "!InputUserName!"=="" (
     FOR /F "tokens=* USEBACKQ" %%U IN (`whoami`) DO SET "User=%%U"
   ) ELSE IF /I NOT "!InputUserName!"=="" SET "User=!InputUserName!"
 ) ELSE (
-  SET /P "InputUserName=Enter admin username or leave blank to use saved variable ^(!User!^): "
+  SET /P "InputUserName=Enter admin username or leave blank to use saved username ^(!User!^): "
   IF /I NOT "!InputUserName!"=="" SET "User=!InputUserName!"
 )
 
-SET "PSCommand=powershell -Command "$pword = read-host 'Enter admin password or leave blank to use saved variable' -AsSecureString ; ^
+SET "PSCommand=powershell -Command "$pword = read-host 'Enter admin password or leave blank to use saved password' -AsSecureString ; ^
     $BSTR=[System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pword); ^
         [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)""
 FOR /F "usebackq delims=" %%P IN (`%PSCommand%`) DO SET "InputPassword=%%P"
 IF /I NOT "!InputPassword!"=="" SET "Pass=!InputPassword!"
 
+SET creds=filled
 GOTO begin
 
 :NotAdmin
-IF !NeedAdmin!==1 GOTO elevate
+IF %NeedAdmin%==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
 ECHO If you would like this setting to be persistent, please edit line 11 of this script.
@@ -68,7 +90,9 @@ IF ERRORLEVEL 1 GOTO notelevated
 ECHO Using Powershell to elevate session.
 ECHO.
 Powershell.exe Start-process %0 -verb runas
-goto close
+POPD
+ENDLOCAL
+EXIT
 
 :notelevated
 ECHO Running without admin permissions.
@@ -86,23 +110,35 @@ goto begin
 
 :begin
 TITLE Quick Command Tool - Target: No Target Selected
-SET NAME=localhost
-SET /P NAME="Enter Computer Name or IP Address (leave blank and press enter to target localhost): "
-TITLE Quick Command Tool - Target: !NAME!
+IF NOT DEFINED NAME SET NAME=localhost
+SET /P NAME="Enter Computer Name or IP Address, or leave blank to target !NAME!: "
 IF DEFINED Logging DEL /F %CD%\log.txt
+IF NOT !NAME!==localhost GOTO flagswitch
+IF !NAME!==localhost goto flagswitch2
+
+:flagswitch
+SET modes=psexec
+GOTO options
+
+:flagswitch2
+SET modes=local
 GOTO options
 
 :options
+TITLE Quick Command Tool - Target: !NAME!
 CLS
 
-ECHO *** Unless specified, all commands are automated and will use the computer name or IP address you entered. ***
-ECHO *** Please ensure the computer name or IP address is correct to prevent issues. ***
+IF !modes!==local ECHO *** Quick Command Tool - Running in Local mode ***
+IF !modes!==psexec ECHO *** Quick Command Tool - Running in PsExec mode ***
+IF !modes!==psexec ECHO *** Unless specified, all commands are automated and will use the computer name or IP address you entered. ***
+IF !modes!==psexec ECHO *** Please ensure the computer name or IP address is correct to prevent issues. ***
 ECHO.
 ECHO 1. Change target computer.
-ECHO 2. Run nslookup on target computer.
+IF !modes!==local ECHO 2. Toggle mode. Current: Local (all commands in option 5 run on localhost without PsExec)
+IF !modes!==psexec ECHO 2. Toggle mode. Current: PsExec (all commands in option 5 run on target with PsExec)
 ECHO 3. View SystemInfo Menu.
 ECHO 4. Ping target computer.
-ECHO 5. View PsExec Menu.
+ECHO 5. Troubleshooting and common fixes.
 ECHO 6. Enter your own command.
 ECHO 7. Relaunch this script as admin.
 ECHO 8. See more options.
@@ -120,15 +156,19 @@ ECHO.
 IF ERRORLEVEL 10 GOTO info
 IF ERRORLEVEL 9 GOTO close
 IF ERRORLEVEL 8 GOTO page2
-IF ERRORLEVEL 7 GOTO six
-IF ERRORLEVEL 6 GOTO five
-IF ERRORLEVEL 5 GOTO four
-IF ERRORLEVEL 4 GOTO three
-IF ERRORLEVEL 3 GOTO two
-IF ERRORLEVEL 2 GOTO one
+IF ERRORLEVEL 7 GOTO admin
+IF ERRORLEVEL 6 GOTO write
+IF ERRORLEVEL 5 GOTO troubleshooting
+IF ERRORLEVEL 4 GOTO callping
+IF ERRORLEVEL 3 GOTO sysinfo
+IF ERRORLEVEL 2 GOTO toggle
 IF ERRORLEVEL 1 GOTO clsbegin
 
-:six
+:toggle
+IF !modes!==local GOTO flagswitch
+IF !modes!==psexec GOTO flagswitch2
+
+:admin
 WHOAMI /all | findstr S-1-16-12288 > nul
 
 IF ERRORLEVEL 1 GOTO elevate
@@ -153,18 +193,19 @@ ECHO.
 PAUSE
 GOTO options
 
-:five
+:write
 SET /P CUSTOM="Which command would you like to run? "
 ECHO.
 !CUSTOM!
 PAUSE
 GOTO options
 
-:four
-if !PsExecPath!==0 GOTO oops
-
+:troubleshooting
+IF !modes!==psexec (
+IF NOT !creds!==filled GOTO getcreds
+)
 ECHO.
-ECHO *** PsExec Options ***
+ECHO *** Troubleshooting and Common Fixes ***
 ECHO 1. Define your own arguments to the command.
 ECHO 2. Run gpupdate /force on target computer.
 ECHO 3. Restart print spooler on target computer.
@@ -176,7 +217,9 @@ ECHO 8. Kill all running PsExec tasks on target.
 ECHO 9. Enter your own PsKill command.
 ECHO 0. Return to main menu.
 ECHO.
-QUERY user /server:!NAME!
+IF NOT DEFINED PsExecPath ECHO No path specified for PsExec. Commands will be run on localhost.
+IF !modes!==local ECHO Local mode is enabled. All commands will be run on localhost.
+IF !modes!==psexec QUERY user /server:!NAME!
 ECHO.
 CHOICE /N /C:1234567890 /M "Please select from the above options. "
 ECHO.
@@ -194,6 +237,11 @@ IF ERRORLEVEL 1 GOTO custompsexec
 
 :killpsexec
 ECHO.
+IF NOT DEFINED PsExecPath (
+  ECHO No path specified for PsExec. Returning to previous menu.
+  PAUSE
+  GOTO four
+)
 !PsExecPath!\pskill -t \\!NAME! psexesvc.exe
 IF DEFINED Logging ECHO •Remotely ended active PsExec tasks on !NAME!. >> %CD%\log.txt
 ECHO Ended active PsExec tasks on !NAME!.
@@ -202,6 +250,11 @@ GOTO options
 
 :pskill
 ECHO.
+IF NOT DEFINED PsExecPath (
+  ECHO No path specified for PsExec. Returning to previous menu.
+  PAUSE
+  GOTO four
+)
 ECHO Pulling active tasks from target computer.
 START cmd /c !PsExecPath!\psexec \\!NAME! tasklist ^& pause
 SET /P TASK="Enter the full name and extension of the task you want to kill (example: outlook.exe): "
@@ -213,6 +266,12 @@ GOTO options
 
 :cleanup
 ECHO.
+IF !modes!==local (
+  cleanmgr /AUTOCLEAN
+  ECHO Disk cleanup started.
+  PAUSE
+  GOTO options
+)
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 START !PsExecPath!\psexec -i !SESSION! \\!NAME! -u !User! -p !Pass! cleanmgr /AUTOCLEAN
@@ -223,6 +282,14 @@ GOTO options
 
 :testpage
 ECHO.
+IF !modes!==local (
+  wmic printer list brief
+  SET /P PRINTER="Enter the full name of the printer to send a test page to: "
+  rundll32 printui.dll,PrintUIEntry /k /n "!PRINTER!"
+  ECHO Test page has been sent.
+  PAUSE
+  GOTO options
+)
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 !PsExecPath!\psexec \\!NAME! wmic printer list brief
@@ -238,6 +305,12 @@ GOTO options
 ECHO.
 SET /P DPATH="Enter the full path to the share drive that needs to be mapped, including the double slashes: "
 SET /P LABEL="Enter the letter you want to assign to the drive: "
+IF !modes!==local (
+  net use !LABEL!: !DPATH! /p:yes ^& pause
+  ECHO Drive mapped.
+  PAUSE
+  GOTO options
+)
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 ECHO Mapping drive now. Please confirm it was successful.
@@ -248,6 +321,13 @@ PAUSE
 GOTO options
 
 :lock
+ECHO.
+IF !modes!==local (
+  C:\Windows\System32\rundll32.exe user32.dll,LockWorkStation
+  ECHO Locked workstation.
+  PAUSE
+  GOTO options
+)
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 ECHO Locking remote PC now.
@@ -259,6 +339,12 @@ GOTO options
 
 :reboot
 ECHO.
+IF !modes!==local (
+  shutdown /f /r
+  ECHO Reboot started.
+  PAUSE
+  GOTO options
+)
 ECHO Rebooting remote PC now.
 ECHO.
 START !PsExecPath!\psexec \\!NAME! shutdown /f /r
@@ -266,20 +352,15 @@ IF DEFINED Logging ECHO •Reset !NAME!. >> %CD%\log.txt
 PAUSE
 GOTO options
 
-:oops
-ECHO You did not set a path for PsExec^^! Please edit line 8 of this script with the path to your PSTools folder.
-ECHO.
-ECHO Alternatively, you can enter the path in the prompt below.
-ECHO Please note that this will need to be set every time this is launched if the script is not edited.
-ECHO If you selected this option by mistake, leave the field empty and press enter to return to the main menu.
-ECHO.
-SET /P PsExecPath="Enter the full path to the PSTools folder: "
-ECHO.
-
-IF !PsExecPath!==0 GOTO options
-GOTO four
-
 :spooler
+IF !modes!==local (
+  NET stop spooler
+  DEL %systemroot%\System32\spool\printers\* /Q
+  net start spooler
+  ECHO Print spooler restarted and print queue reset.
+  PAUSE
+  GOTO options
+)
 ECHO Restarting print spooler. This will take about one minute. The script will print a message to let you know when it is complete.
 START !PsExecPath!\psexec \\!NAME! NET stop spooler
 TIMEOUT /T 10 /NOBREAK
@@ -294,6 +375,11 @@ GOTO options
 
 :custompsexec
 ECHO.
+IF NOT DEFINED PsExecPath (
+  ECHO No path specified for PsExec. Returning to previous menu.
+  PAUSE
+  GOTO four
+)
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
 SET /P COMMAND="Please complete the command with your desired arguments: psexec \\!NAME! "
@@ -303,18 +389,24 @@ PAUSE
 GOTO options
 
 :defaultpsexec
+ECHO.
+IF NOT DEFINED PsExecPath (
+  ECHO No path specified for PsExec. Returning to previous menu.
+  PAUSE
+  GOTO four
+)
 START !PsExecPath!\psexec \\!NAME! gpupdate /force
 ECHO Running gpupdate. Please check PsExec window to confirm there are no errors.
 IF DEFINED Logging ECHO •Ran remote gpupdate on !NAME!. >> %CD%\log.txt
 PAUSE
 GOTO options
 
-:three
+:callping
 PING !NAME!
 PAUSE
 GOTO options
 
-:two
+:sysinfo
 ECHO.
 ECHO *** SystemInfo Options ***
 ECHO 1. Find last reboot time.
@@ -337,7 +429,7 @@ SYSTEMINFO /S !NAME! | FIND "System Boot Time"
 PAUSE
 GOTO options
 
-:one
+:lookup
 NSLOOKUP !NAME!
 PAUSE
 GOTO options
@@ -348,12 +440,14 @@ ECHO *** Main Menu Page 2 ***
 ECHO 1. Network Locations
 ECHO 2. Open log file.
 ECHO 3. Map a network drive.
-ECHO 4. Return to main menu.
+ECHO 4. Run nslookup on target computer.
+ECHO 5. Return to main menu.
 ECHO.
-CHOICE /N /C:1234 /M "Please select from the above options. "
+CHOICE /N /C:12345 /M "Please select from the above options. "
 ECHO.
 
-IF ERRORLEVEL 4 GOTO options
+IF ERRORLEVEL 5 GOTO options
+IF ERRORLEVEL 4 GOTO lookup
 IF ERRORLEVEL 3 GOTO mapdrive
 IF ERRORLEVEL 2 GOTO viewlog
 IF ERRORLEVEL 1 GOTO locations
@@ -413,6 +507,6 @@ START !d1!
 GOTO options
 
 :close
-popd
-endlocal
-exit
+POPD
+ENDLOCAL
+EXIT
