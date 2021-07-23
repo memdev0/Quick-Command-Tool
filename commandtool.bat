@@ -75,7 +75,7 @@ SET creds=filled
 GOTO begin
 
 :NotAdmin
-IF %NeedAdmin%==1 GOTO elevate
+IF !NeedAdmin!==1 GOTO elevate
 ECHO Administrative permissions are needed for some commands.
 ECHO This tool can be run without administrative permissions, but some commands will be unavailable.
 ECHO If you would like this setting to be persistent, please edit line 11 of this script.
@@ -168,6 +168,16 @@ IF ERRORLEVEL 1 GOTO clsbegin
 IF !modes!==local GOTO flagswitch
 IF !modes!==psexec GOTO flagswitch2
 
+:setpsexec
+SET modes=psexec
+ECHO Toggled PsExec mode on.
+GOTO options
+
+:setloc
+SET modes=local
+ECHO Toggled local mode on.
+GOTO options
+
 :admin
 WHOAMI /all | findstr S-1-16-12288 > nul
 
@@ -240,7 +250,7 @@ ECHO.
 IF NOT DEFINED PsExecPath (
   ECHO No path specified for PsExec. Returning to previous menu.
   PAUSE
-  GOTO four
+  goto troubleshooting
 )
 !PsExecPath!\pskill -t \\!NAME! psexesvc.exe
 IF DEFINED Logging ECHO •Remotely ended active PsExec tasks on !NAME!. >> %CD%\log.txt
@@ -253,7 +263,7 @@ ECHO.
 IF NOT DEFINED PsExecPath (
   ECHO No path specified for PsExec. Returning to previous menu.
   PAUSE
-  GOTO four
+  goto troubleshooting
 )
 ECHO Pulling active tasks from target computer.
 START cmd /c !PsExecPath!\psexec \\!NAME! tasklist ^& pause
@@ -378,7 +388,7 @@ ECHO.
 IF NOT DEFINED PsExecPath (
   ECHO No path specified for PsExec. Returning to previous menu.
   PAUSE
-  GOTO four
+  goto troubleshooting
 )
 SET /P SESSION="Enter the ID of the session to run the command in: "
 ECHO.
@@ -393,7 +403,7 @@ ECHO.
 IF NOT DEFINED PsExecPath (
   ECHO No path specified for PsExec. Returning to previous menu.
   PAUSE
-  GOTO four
+  goto troubleshooting
 )
 START !PsExecPath!\psexec \\!NAME! gpupdate /force
 ECHO Running gpupdate. Please check PsExec window to confirm there are no errors.
