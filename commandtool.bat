@@ -36,7 +36,7 @@ SET skipuserpass=1
 GOTO options
 
 :namehandle
-SET modes=psexec
+SET modes=remote
 SET NAME=%1
 SET skipuserpass=0
 GOTO adminsplit
@@ -117,7 +117,7 @@ IF NOT !NAME!==localhost GOTO flagswitch
 IF !NAME!==localhost goto flagswitch2
 
 :flagswitch
-SET modes=psexec
+SET modes=remote
 GOTO options
 
 :flagswitch2
@@ -129,13 +129,13 @@ TITLE Quick Command Tool - Target: !NAME!
 CLS
 
 IF !modes!==local ECHO *** Quick Command Tool - Running in Local mode ***
-IF !modes!==psexec ECHO *** Quick Command Tool - Running in PsExec mode ***
-IF !modes!==psexec ECHO *** Unless specified, all commands are automated and will use the computer name or IP address you entered. ***
-IF !modes!==psexec ECHO *** Please ensure the computer name or IP address is correct to prevent issues. ***
+IF !modes!==remote ECHO *** Quick Command Tool - Running in Remote mode ***
+IF !modes!==remote ECHO *** Unless specified, all commands are automated and will use the computer name or IP address you entered. ***
+IF !modes!==remote ECHO *** Please ensure the computer name or IP address is correct to prevent issues. ***
 ECHO.
 ECHO 1. Change target computer.
 IF !modes!==local ECHO 2. Toggle mode. Current: Local (all commands in option 5 run on localhost without PsExec)
-IF !modes!==psexec ECHO 2. Toggle mode. Current: PsExec (all commands in option 5 run on target with PsExec)
+IF !modes!==remote ECHO 2. Toggle mode. Current: Remote (all commands in option 5 run on target with PsExec)
 ECHO 3. View SystemInfo Menu.
 ECHO 4. Ping target computer.
 ECHO 5. Troubleshooting and common fixes.
@@ -166,7 +166,7 @@ IF ERRORLEVEL 1 GOTO clsbegin
 
 :toggle
 IF !modes!==local GOTO flagswitch
-IF !modes!==psexec GOTO flagswitch2
+IF !modes!==remote GOTO flagswitch2
 
 :admin
 WHOAMI /all | findstr S-1-16-12288 > nul
@@ -201,7 +201,7 @@ PAUSE
 GOTO options
 
 :troubleshooting
-IF !modes!==psexec (
+IF !modes!==remote (
 IF NOT !creds!==filled GOTO getcreds
 )
 ECHO.
@@ -219,7 +219,7 @@ ECHO 0. Return to main menu.
 ECHO.
 IF NOT DEFINED PsExecPath ECHO No path specified for PsExec. Commands will be run on localhost.
 IF !modes!==local ECHO Local mode is enabled. All commands will be run on localhost.
-IF !modes!==psexec QUERY user /server:!NAME!
+IF !modes!==remote QUERY user /server:!NAME!
 ECHO.
 CHOICE /N /C:1234567890 /M "Please select from the above options. "
 ECHO.
