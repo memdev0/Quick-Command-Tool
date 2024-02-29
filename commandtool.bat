@@ -24,7 +24,9 @@ REM Set a persistent admin username here if you want to skip through the startup
 SET Pass=
 REM Set a persistent admin password here if you want to skip through the startup.
 
-IF NOT DEFINED PsExecPath GOTO localhandle
+REM IF NOT DEFINED PsExecPath GOTO localhandle
+REM Use above line to start tool in local mode without needing admin credentials.
+
 IF /I "%~1"=="local" GOTO localhandle
 IF /I NOT "%~1"=="" GOTO namehandle
 GOTO adminsplit
@@ -46,7 +48,7 @@ IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
 :checkadmin
-WHOAMI /all | findstr S-1-16-12288 > nul
+WHOAMI /all | findstr S-1-5-32-544 > nul
 
 IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
