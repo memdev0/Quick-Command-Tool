@@ -48,7 +48,7 @@ IF !NeedAdmin!==1 GOTO checkadmin
 IF !NeedAdmin!==0 GOTO notelevated
 
 :checkadmin
-WHOAMI /all | findstr S-1-5-32-544 > nul
+WHOAMI /all | findstr S-1-16-12288 > nul
 
 IF ERRORLEVEL 1 GOTO NotAdmin
 ECHO Administrative permissions confirmed.
